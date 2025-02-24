@@ -107,8 +107,29 @@ def calculate_progress(user, assigned_indices):
 
 
 
-def save_labels_to_excel():
-    """라벨링 결과를 엑셀 파일로 저장"""
+# def save_labels_to_excel():
+#     """라벨링 결과를 엑셀 파일로 저장"""
+#     results = []
+#     for idx, item in enumerate(st.session_state.all_data):
+#         label_data = st.session_state.labels.get(str(idx), {})
+#         results.append({
+#             'instruction': item['instruction'],
+#             'output': item['output'],
+#             'label': label_data.get('label', ''),
+#             'labeled_by': label_data.get('user', ''),
+#             'timestamp': label_data.get('timestamp', '')
+#         })
+    
+#     df = pd.DataFrame(results)
+#     # 엑셀 파일 생성
+#     output = io.BytesIO()
+#     with pd.ExcelWriter(output, engine='openpyxl') as writer:
+#         df.to_excel(writer, index=False)
+    
+#     return output.getvalue()
+
+def save_labels_to_csv():
+    """라벨링 결과를 CSV 파일로 저장"""
     results = []
     for idx, item in enumerate(st.session_state.all_data):
         label_data = st.session_state.labels.get(str(idx), {})
@@ -121,12 +142,7 @@ def save_labels_to_excel():
         })
     
     df = pd.DataFrame(results)
-    # 엑셀 파일 생성
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False)
-    
-    return output.getvalue()
+    return df.to_csv(index=False).encode('utf-8')
 
 def host_interface():
     """호스트 인터페이스"""
@@ -188,6 +204,22 @@ def host_interface():
             st.success("데이터가 성공적으로 분배되었습니다!")
     
     # 진행 상황 확인
+    # if st.session_state.labels:
+    #     st.header("진행 상황")
+    #     for user, assigned_indices in st.session_state.user_assignments.items():
+    #         completed = calculate_progress(user, assigned_indices)
+    #         progress = completed / len(assigned_indices)
+    #         st.write(f"{user}: {completed}/{len(assigned_indices)} ({progress:.1%})")
+        
+    #     # 결과 다운로드
+    #     if st.button("결과 다운로드"):
+    #         excel_data = save_labels_to_excel()
+    #         st.download_button(
+    #             label="엑셀 파일 다운로드",
+    #             data=excel_data,
+    #             file_name=f"labeling_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+    #             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    #         )
     if st.session_state.labels:
         st.header("진행 상황")
         for user, assigned_indices in st.session_state.user_assignments.items():
@@ -197,12 +229,12 @@ def host_interface():
         
         # 결과 다운로드
         if st.button("결과 다운로드"):
-            excel_data = save_labels_to_excel()
+            csv_data = save_labels_to_csv()
             st.download_button(
-                label="엑셀 파일 다운로드",
-                data=excel_data,
-                file_name=f"labeling_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                label="CSV 파일 다운로드",
+                data=csv_data,
+                file_name=f"labeling_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
             )
 
 def show_info_popup(user, assigned_indices):
